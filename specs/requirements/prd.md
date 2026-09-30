@@ -41,9 +41,9 @@ platform resources of any kind. Restarting the API service clears all
 todos.
 - The web app is a single-page application that calls the REST API directly.
 - Each todo has a title and a completed flag only — no description, due
-date, priority, or category fields. *assumed*
-- Todos are shown in the order they were created, with no sorting or
-filtering controls. *assumed*
+date, priority, or category fields.
+- Todos are shown in the order they were created (oldest first), with no
+sorting or filtering controls.
 
 ## Out of Scope
 
