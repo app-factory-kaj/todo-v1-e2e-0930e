@@ -22,15 +22,15 @@ every User sees and manages the same shared list of todos.
 ## User Stories
 
 1. As a User, I want to create a todo with a title, so that I can capture
- something I need to do.
+something I need to do.
 2. As a User, I want to view the list of all todos, so that I can see
- everything I still need to do and what I've finished.
+everything I still need to do and what I've finished.
 3. As a User, I want to update a todo's title, so that I can correct or
- refine it after creating it.
+refine it after creating it.
 4. As a User, I want to mark a todo as complete (and reopen it), so that I
- can track my progress.
+can track my progress.
 5. As a User, I want to delete a todo, so that I can remove items I no
- longer need.
+longer need.
 
 ## Product Decisions
 
