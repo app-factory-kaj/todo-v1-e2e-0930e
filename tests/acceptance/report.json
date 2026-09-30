@@ -1,0 +1,230 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-30T18:35:21Z",
+  "commit": "8ebd84128fd2eb8a4ae2a3164ec4ca3b3346513b",
+  "baseUrl": "https://v4qyqgrpbs-gw-p1.gateway.dp.dev.cloud.wso2.com:443/todo-v1-e2e-0930e-todo-api-http",
+  "isolation": "each scenario creates its own todo(s) via POST /todos, asserts only on those, and deletes them afterward to restore the shared list to empty for the next scenario's Given. The system has no accounts (todo-webapp design confirms 'No sign-in, no accounts — every visitor sees and manages the same shared list'), so Alex and Jordan are unauthenticated callers of the same API with no distinguishing session. The validation context (/tmp/validation-context.json) provided only the todo-api endpoint, no todo-webapp URL, so every When/Then was driven directly against the API rather than a browser UI.",
+  "scenarios": [
+    {
+      "feature": "Todo management",
+      "featureFile": "specs/validation/acceptance/todo-management.feature",
+      "line": 6,
+      "rule": "Creating a todo requires a title",
+      "scenario": "A User adds a todo with a title",
+      "tags": [],
+      "outcome": "passed",
+      "steps": [
+        { "text": "the todo list is empty", "keyword": "Given",
+          "command": "curl -s $BASE/todos", "exit": 0,
+          "observed": "{\"count\":0,\"data\":[]}" },
+        { "text": "Alex creates a todo titled \"Buy groceries\"", "keyword": "When",
+          "command": "curl -s -X POST $BASE/todos -d '{\"title\":\"Buy groceries\"}'", "exit": 0,
+          "observed": "201, {\"id\":\"096c9b8c-...\",\"title\":\"Buy groceries\",\"completed\":false}" },
+        { "text": "the todo list has exactly one todo", "keyword": "Then",
+          "command": "curl -s $BASE/todos", "exit": 0,
+          "observed": "count:1" },
+        { "text": "that todo is titled \"Buy groceries\" and is not completed", "keyword": "And",
+          "command": "curl -s $BASE/todos", "exit": 0,
+          "observed": "data[0].title=\"Buy groceries\", data[0].completed=false" }
+      ],
+      "evidence": {
+        "network": [
+          { "method": "POST", "url": "/todos", "status": 201 },
+          { "method": "GET", "url": "/todos", "status": 200 }
+        ]
+      }
+    },
+    {
+      "feature": "Todo management",
+      "featureFile": "specs/validation/acceptance/todo-management.feature",
+      "line": 13,
+      "rule": "Creating a todo requires a title",
+      "scenario": "A blank title is refused",
+      "tags": ["@negative"],
+      "outcome": "passed",
+      "steps": [
+        { "text": "the todo list is empty", "keyword": "Given",
+          "command": "curl -s $BASE/todos", "exit": 0,
+          "observed": "{\"count\":0,\"data\":[]}" },
+        { "text": "Alex tries to create a todo with an empty title", "keyword": "When",
+          "command": "curl -s -X POST $BASE/todos -d '{\"title\":\"\"}'", "exit": 0,
+          "observed": "400, {\"code\":400,\"message\":\"Bad Request\",\"description\":\"title must not be blank\"}" },
+        { "text": "the todo list still has no todos", "keyword": "Then",
+          "command": "curl -s $BASE/todos", "exit": 0,
+          "observed": "{\"count\":0,\"data\":[]}" }
+      ],
+      "evidence": {
+        "network": [
+          { "method": "POST", "url": "/todos", "status": 400 },
+          { "method": "GET", "url": "/todos", "status": 200 }
+        ]
+      }
+    },
+    {
+      "feature": "Todo management",
+      "featureFile": "specs/validation/acceptance/todo-management.feature",
+      "line": 21,
+      "rule": "Every User sees the same shared list of todos, oldest first",
+      "scenario": "Todos appear in the order they were created",
+      "tags": [],
+      "outcome": "passed",
+      "steps": [
+        { "text": "Alex has created a todo titled \"Buy groceries\"", "keyword": "Given",
+          "command": "curl -s -X POST $BASE/todos -d '{\"title\":\"Buy groceries\"}'", "exit": 0,
+          "observed": "201, id=340a9baa-..., createdAt=2026-09-30T18:34:50.926Z" },
+        { "text": "Alex has then created a todo titled \"Write report\"", "keyword": "And",
+          "command": "curl -s -X POST $BASE/todos -d '{\"title\":\"Write report\"}'", "exit": 0,
+          "observed": "201, id=0f311f11-..., createdAt=2026-09-30T18:34:51.994Z" },
+        { "text": "Jordan views the todo list", "keyword": "When",
+          "command": "curl -s $BASE/todos", "exit": 0,
+          "observed": "count:2" },
+        { "text": "Jordan sees \"Buy groceries\" listed before \"Write report\"", "keyword": "Then",
+          "command": "curl -s $BASE/todos", "exit": 0,
+          "observed": "data[0].title=\"Buy groceries\", data[1].title=\"Write report\"" }
+      ],
+      "evidence": {
+        "network": [
+          { "method": "POST", "url": "/todos", "status": 201 },
+          { "method": "POST", "url": "/todos", "status": 201 },
+          { "method": "GET", "url": "/todos", "status": 200 }
+        ]
+      }
+    },
+    {
+      "feature": "Todo management",
+      "featureFile": "specs/validation/acceptance/todo-management.feature",
+      "line": 30,
+      "rule": "A todo's title can be updated",
+      "scenario": "A User corrects a todo's title",
+      "tags": [],
+      "outcome": "passed",
+      "steps": [
+        { "text": "Alex has created a todo titled \"By groceries\"", "keyword": "Given",
+          "command": "curl -s -X POST $BASE/todos -d '{\"title\":\"By groceries\"}'", "exit": 0,
+          "observed": "201, id=98e5a6e1-b198-4a76-b53a-8bcfd42996a1" },
+        { "text": "Alex updates that todo's title to \"Buy groceries\"", "keyword": "When",
+          "command": "curl -s -X PUT $BASE/todos/98e5a6e1-... -d '{\"title\":\"Buy groceries\"}'", "exit": 0,
+          "observed": "200, title=\"Buy groceries\"" },
+        { "text": "the todo is titled \"Buy groceries\"", "keyword": "Then",
+          "command": "curl -s $BASE/todos/98e5a6e1-...", "exit": 0,
+          "observed": "title=\"Buy groceries\"" }
+      ],
+      "evidence": {
+        "network": [
+          { "method": "POST", "url": "/todos", "status": 201 },
+          { "method": "PUT", "url": "/todos/98e5a6e1-b198-4a76-b53a-8bcfd42996a1", "status": 200 },
+          { "method": "GET", "url": "/todos/98e5a6e1-b198-4a76-b53a-8bcfd42996a1", "status": 200 }
+        ]
+      }
+    },
+    {
+      "feature": "Todo management",
+      "featureFile": "specs/validation/acceptance/todo-management.feature",
+      "line": 36,
+      "rule": "A todo's title can be updated",
+      "scenario": "Clearing the title is refused",
+      "tags": ["@negative"],
+      "outcome": "passed",
+      "steps": [
+        { "text": "Alex has created a todo titled \"Buy groceries\"", "keyword": "Given",
+          "command": "curl -s -X POST $BASE/todos -d '{\"title\":\"Buy groceries\"}'", "exit": 0,
+          "observed": "201, id=732aa78c-a172-4bdf-b1aa-5649a9d1e035" },
+        { "text": "Alex tries to update that todo's title to an empty title", "keyword": "When",
+          "command": "curl -s -X PUT $BASE/todos/732aa78c-... -d '{\"title\":\"\"}'", "exit": 0,
+          "observed": "400, {\"code\":400,\"message\":\"Bad Request\",\"description\":\"title must not be blank\"}" },
+        { "text": "the todo is still titled \"Buy groceries\"", "keyword": "Then",
+          "command": "curl -s $BASE/todos/732aa78c-...", "exit": 0,
+          "observed": "title=\"Buy groceries\"" }
+      ],
+      "evidence": {
+        "network": [
+          { "method": "POST", "url": "/todos", "status": 201 },
+          { "method": "PUT", "url": "/todos/732aa78c-a172-4bdf-b1aa-5649a9d1e035", "status": 400 },
+          { "method": "GET", "url": "/todos/732aa78c-a172-4bdf-b1aa-5649a9d1e035", "status": 200 }
+        ]
+      }
+    },
+    {
+      "feature": "Todo management",
+      "featureFile": "specs/validation/acceptance/todo-management.feature",
+      "line": 44,
+      "rule": "A todo can be marked complete and reopened",
+      "scenario": "A User completes a todo",
+      "tags": [],
+      "outcome": "passed",
+      "steps": [
+        { "text": "Alex has created a todo titled \"Buy groceries\"", "keyword": "Given",
+          "command": "curl -s -X POST $BASE/todos -d '{\"title\":\"Buy groceries\"}'", "exit": 0,
+          "observed": "201, id=f9899f3f-2be1-4189-bd25-4e6ba0bc024d, completed=false" },
+        { "text": "Alex marks that todo as complete", "keyword": "When",
+          "command": "curl -s -X PUT $BASE/todos/f9899f3f-... -d '{\"completed\":true}'", "exit": 0,
+          "observed": "200, completed=true" },
+        { "text": "the todo is shown as completed", "keyword": "Then",
+          "command": "curl -s $BASE/todos/f9899f3f-...", "exit": 0,
+          "observed": "completed=true" }
+      ],
+      "evidence": {
+        "network": [
+          { "method": "POST", "url": "/todos", "status": 201 },
+          { "method": "PUT", "url": "/todos/f9899f3f-2be1-4189-bd25-4e6ba0bc024d", "status": 200 },
+          { "method": "GET", "url": "/todos/f9899f3f-2be1-4189-bd25-4e6ba0bc024d", "status": 200 }
+        ]
+      }
+    },
+    {
+      "feature": "Todo management",
+      "featureFile": "specs/validation/acceptance/todo-management.feature",
+      "line": 49,
+      "rule": "A todo can be marked complete and reopened",
+      "scenario": "A User reopens a completed todo",
+      "tags": [],
+      "outcome": "passed",
+      "steps": [
+        { "text": "Alex has created a todo titled \"Buy groceries\" and marked it complete", "keyword": "Given",
+          "command": "curl -s -X POST $BASE/todos -d '{\"title\":\"Buy groceries\"}' && curl -s -X PUT $BASE/todos/{id} -d '{\"completed\":true}'", "exit": 0,
+          "observed": "id=ad22e33c-f152-4117-a10f-068420e4562a, completed=true after both calls" },
+        { "text": "Alex reopens that todo", "keyword": "When",
+          "command": "curl -s -X PUT $BASE/todos/ad22e33c-... -d '{\"completed\":false}'", "exit": 0,
+          "observed": "200, completed=false" },
+        { "text": "the todo is shown as not completed", "keyword": "Then",
+          "command": "curl -s $BASE/todos/ad22e33c-...", "exit": 0,
+          "observed": "completed=false" }
+      ],
+      "evidence": {
+        "network": [
+          { "method": "POST", "url": "/todos", "status": 201 },
+          { "method": "PUT", "url": "/todos/ad22e33c-f152-4117-a10f-068420e4562a", "status": 200 },
+          { "method": "PUT", "url": "/todos/ad22e33c-f152-4117-a10f-068420e4562a", "status": 200 },
+          { "method": "GET", "url": "/todos/ad22e33c-f152-4117-a10f-068420e4562a", "status": 200 }
+        ]
+      }
+    },
+    {
+      "feature": "Todo management",
+      "featureFile": "specs/validation/acceptance/todo-management.feature",
+      "line": 57,
+      "rule": "A todo can be deleted",
+      "scenario": "A User removes a todo they no longer need",
+      "tags": [],
+      "outcome": "passed",
+      "steps": [
+        { "text": "Alex has created a todo titled \"Buy groceries\"", "keyword": "Given",
+          "command": "curl -s -X POST $BASE/todos -d '{\"title\":\"Buy groceries\"}'", "exit": 0,
+          "observed": "201, id=7b0724bb-e176-4de2-8db9-aabe70eb4694" },
+        { "text": "Alex deletes that todo", "keyword": "When",
+          "command": "curl -s -X DELETE $BASE/todos/7b0724bb-...", "exit": 0,
+          "observed": "204" },
+        { "text": "the todo list has no todo titled \"Buy groceries\"", "keyword": "Then",
+          "command": "curl -s $BASE/todos", "exit": 0,
+          "observed": "{\"count\":0,\"data\":[]}" }
+      ],
+      "evidence": {
+        "network": [
+          { "method": "POST", "url": "/todos", "status": 201 },
+          { "method": "DELETE", "url": "/todos/7b0724bb-e176-4de2-8db9-aabe70eb4694", "status": 204 },
+          { "method": "GET", "url": "/todos", "status": 200 }
+        ]
+      }
+    }
+  ]
+}
