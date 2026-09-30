@@ -1,0 +1,14 @@
+{
+  "name": "todo-api",
+  "type": "service",
+  "version": "0.1.0",
+  "language": "Ballerina",
+  "buildpack": "docker",
+  "appPath": "todo-api",
+  "entrypoint": "deployment/service",
+  "exposure": "internet",
+  "dependencies": [],
+  "description": "REST API for managing todos, backed entirely by an in-memory store with no database and no platform resources. Supports creating, listing, updating (title and completed status), and deleting todos. Data does not survive a restart. Does not implement any authentication, accounts, or multi-list support.",
+  "stories": [1, 2, 3, 4, 5],
+  "skillsPinned": ["openapi-conventions", "ballerina"]
+}
