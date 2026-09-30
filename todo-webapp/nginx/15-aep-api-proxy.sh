@@ -20,14 +20,21 @@
 
 set -e
 
-CONF=/etc/nginx/conf.d/default.conf
+# The rendered config goes under /tmp, not /etc/nginx/conf.d: this container
+# runs as the non-root `nginx` user with no guaranteed writable root
+# filesystem, and /tmp is the one path such a pod always has. The template
+# (TEMPLATE) stays read-only, baked into the image; only the substituted
+# copy (OUT) is written, at container startup.
+TEMPLATE=/etc/nginx/templates/default.conf.tmpl
+OUT_DIR=/tmp/nginx/conf.d
+OUT="${OUT_DIR}/default.conf"
+mkdir -p "$OUT_DIR"
 
 DNS_RESOLVERS="$(awk '/^nameserver/ {print $2}' /etc/resolv.conf | tr '\n' ' ' | sed 's/ $//')"
 if [ -z "$DNS_RESOLVERS" ]; then
     echo "aep-api-proxy: no nameservers in /etc/resolv.conf; /api will 502"
     DNS_RESOLVERS="127.0.0.11"
 fi
-sed -i "s|__DNS_RESOLVERS__|${DNS_RESOLVERS}|g" "$CONF"
 
 # Primary sibling address. After copy, the coding agent renames BOTH variables
 # below to the UPPER_SNAKE of the primary component-kind dependency
@@ -65,5 +72,7 @@ if [ -z "$API_BACKEND" ]; then
 fi
 
 echo "aep-api-proxy: /api -> ${API_BACKEND}${API_CONTEXT}  [${API_LANE}]"
-sed -i "s|__API_BACKEND__|${API_BACKEND}|g" "$CONF"
-sed -i "s|__API_CONTEXT__|${API_CONTEXT}|g" "$CONF"
+sed -e "s|__DNS_RESOLVERS__|${DNS_RESOLVERS}|g" \
+    -e "s|__API_BACKEND__|${API_BACKEND}|g" \
+    -e "s|__API_CONTEXT__|${API_CONTEXT}|g" \
+    "$TEMPLATE" > "$OUT"
