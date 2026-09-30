@@ -13,7 +13,9 @@ COPY nginx/15-aep-api-proxy.sh /docker-entrypoint.d/15-aep-api-proxy.sh
 RUN chmod +x /docker-entrypoint.d/15-aep-api-proxy.sh
 # Run as the image's built-in non-root user: a runAsNonRoot admission policy
 # rejects a container whose image defaults to root, and everything nginx
-# writes at runtime now lives under /tmp (nginx.conf, 15-aep-api-proxy.sh).
+# writes at runtime now lives under /dev/shm — a tmpfs mounted independently
+# of the root filesystem, so it stays writable even under a
+# readOnlyRootFilesystem pod policy (nginx.conf, 15-aep-api-proxy.sh).
 USER nginx
 EXPOSE 9090
 CMD ["nginx", "-g", "daemon off;"]

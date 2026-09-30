@@ -20,13 +20,16 @@
 
 set -e
 
-# The rendered config goes under /tmp, not /etc/nginx/conf.d: this container
-# runs as the non-root `nginx` user with no guaranteed writable root
-# filesystem, and /tmp is the one path such a pod always has. The template
-# (TEMPLATE) stays read-only, baked into the image; only the substituted
-# copy (OUT) is written, at container startup.
+# The rendered config goes under /dev/shm, not /etc/nginx/conf.d or /tmp: this
+# container runs as the non-root `nginx` user with no guaranteed writable root
+# filesystem, and a `readOnlyRootFilesystem` pod policy makes /tmp read-only
+# right along with the rest of it unless a separate volume is mounted there.
+# /dev/shm is a tmpfs the container runtime mounts independently of the root
+# filesystem, so it stays writable either way. The template (TEMPLATE) stays
+# read-only, baked into the image; only the substituted copy (OUT) is
+# written, at container startup.
 TEMPLATE=/etc/nginx/templates/default.conf.tmpl
-OUT_DIR=/tmp/nginx/conf.d
+OUT_DIR=/dev/shm/nginx/conf.d
 OUT="${OUT_DIR}/default.conf"
 mkdir -p "$OUT_DIR"
 
